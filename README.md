@@ -1,4 +1,4 @@
-# JWT: secure your api
+<h1 align="center">JWT: secure your api</h1>
 
 ## CREATE TOKEN
 
