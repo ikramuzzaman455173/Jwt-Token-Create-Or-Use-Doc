@@ -42,3 +42,134 @@
 9. Call `next()` to go to the next function.
 
 1. Check whether the token has the email that matches the request email.
+
+
+#### Best Examples:)
+
+1. Install the necessary dependencies:
+   ```
+   npm install jsonwebtoken
+   ``` 
+2. Import the `jsonwebtoken` module into your Node.js application:
+   ```javascript
+   const jwt = require('jsonwebtoken');
+   ```
+#### Commone Use Examples:
+
+```javascript
+  app.post('/jwt', (req, res) => {
+      const user = req.body
+      const token = jwt.sign(user, process.env.access_token_secreat_key, { expiresIn: '1h' })
+      res.send({token})
+    })
+```
+    
+    
+#### Create Token Client Side:
+
+
+```javascript
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, currentUser => {
+      setUser(currentUser)
+      // console.log('currentUser',currentUser);
+      if (currentUser) {
+        axios.post('http://localhost:4000/jwt', { email: currentUser.email })
+          .then(data => {
+            console.log(data.data.token);
+            localStorage.setItem('jwt-token', data.data.token)
+          }).catch(error => {
+            console.log(`Error:`, error.message);
+          })
+
+      }
+      else {
+        localStorage.removeItem('jwt-token')
+      }
+      setLoading(false)
+    })
+    return () => {
+      return unsubscribe()
+    }
+  }, [])
+```
+
+#### Server side middelware varifyjwt token:
+
+```javascript
+const varifyJwt = (req, res, next) => {
+  const authorization = req.headers.authorization
+  if (!authorization) {
+    return res.status(401).send({error:true,message:'unauthorized access'})
+  }
+  //bearer token
+  const token = authorization.split(' ')[1]
+  jwt.verify(token, process.env.access_token_secreat_key, (err, decoded) => {
+    if (err) {
+      return res.status(403).send({error:true,message:'unauthorized access'})
+    }
+    req.decoded = decoded
+    next()
+  })
+}
+```
+
+#### Chack User Is Valid Server Side:
+
+```javascript
+  app.get('/carts', varifyJwt, async (req, res) => {
+      const email = req.query.email
+      // console.log(email);
+      if (!email) {
+        res.send([])
+      }
+      const decodedEmail = req.decoded.email
+      if (email !== decodedEmail) {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
+      }
+      const query = { email: email }
+      const result = await cartsBossCollection.find(query).toArray()
+      res.send(result)
+    })
+```
+
+
+    
+3. Generate SecreatKey:
+
+```javascript
+node// write terminal node
+```
+```javascript
+require('crypto').randomBytes(64).toString('hex')
+```
+
+4. Generating a JWT token:
+   ```javascript
+   const payload = { user: 'John Doe' };
+   const secretKey = 'your_secret_key';
+
+   const token = jwt.sign(payload, secretKey);
+   ```
+
+   In the above example, `payload` represents the data you want to include in the token, and `secretKey` is a secret key used to sign the token. Make sure to replace `'your_secret_key'` with your actual secret key.
+
+5. Verifying a JWT token:
+   ```javascript
+   const token = 'your_token_here';
+
+   jwt.verify(token, secretKey, (err, decoded) => {
+     if (err) {
+       // Token is invalid or has expired
+       console.error('Token verification failed:', err);
+     } else {
+       // Token is valid
+       console.log('Decoded token:', decoded);
+     }
+   });
+   ```
+
+   In the above example, `your_token_here` represents the token string you want to verify. The `verify` method takes the token, the secret key, and a callback function. If the token is valid, the decoded payload will be passed to the callback function. If the token is invalid or has expired, an error will be passed to the callback.
+
+That's it! You now have a basic understanding of how to use JWT tokens in a Node.js application. Remember to store your secret key securely and avoid sharing it publicly.
+
