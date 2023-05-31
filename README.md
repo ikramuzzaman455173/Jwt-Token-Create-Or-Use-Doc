@@ -216,9 +216,57 @@ const useCart = () => {
 export default useCart
 ```
 
+#### Secure Admin Routes:
+
+```javascript
+import { useQuery } from "@tanstack/react-query"
+import UseAuth from "./UseAuth"
+import useAxiosSecure from "./UseAxiosSecures"
+
+const UseAdmin = () => {
+  const [axiosSecure]=useAxiosSecure()
+  const { user } = UseAuth()
+  const {data:isAdmin,isLoading:isAdminLoading } = useQuery({
+    queryKey: ['isAdmin', user?.email],
+    queryFn: async () => {
+      const res = await axiosSecure.get(`/users/admin/${user?.email}`)
+      console.log('isAdmin', res.data);
+      return res.data
+    }
+  })
+  return [isAdmin,isAdminLoading]
+}
+export default UseAdmin
+```
+
+#### UseAuth Easy To Use AuthProvider:
+
+```javascript
+import { useContext } from "react"
+import { AuthContext } from "../AuthProvider/AuthProvider";
+
+const UseAuth = () => {
+    const auth = useContext(AuthContext);
+    return auth;
+}
+
+export default UseAuth;
+```
 
 
+#### VarifyAdminJwt Token Create:
 
+```javascript
+const varifyAdminJwt = async (req, res, next) => {
+      const email = req.decoded.email
+      const query = { email: email }
+      const user = await usersCollection.findOne(query)
+      if (user?.role !== 'admin') {
+        return res.status(403).send({error:true,message:'forbidden message'})
+      }
+      next()
+    }
+````
 
 
 
