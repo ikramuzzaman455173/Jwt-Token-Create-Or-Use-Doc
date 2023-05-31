@@ -133,6 +133,97 @@ const varifyJwt = (req, res, next) => {
     })
 ```
 
+#### Jwt token call clien side:)
+
+```javascript
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, currentUser => {
+      setUser(currentUser)
+      // console.log('currentUser',currentUser);
+      if (currentUser) {
+        axios.post('http://localhost:4000/jwt', { email: currentUser.email })
+          .then(data => {
+            console.log(data.data.token);
+            localStorage.setItem('access-token',data.data.token)
+          }).catch(error => {
+            console.log(`Error:`, error.message);
+          })
+
+      }
+      else {
+        localStorage.removeItem('access-token')
+      }
+      setLoading(false)
+    })
+    return () => {
+      return unsubscribe()
+    }
+  }, [])
+```
+
+
+#### jwt token useAxiosSecure clien side:
+
+```javascript
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, currentUser => {
+      setUser(currentUser)
+      // console.log('currentUser',currentUser);
+      if (currentUser) {
+        axios.post('http://localhost:4000/jwt', { email: currentUser.email })
+          .then(data => {
+            console.log(data.data.token);
+            localStorage.setItem('access-token',data.data.token)
+          }).catch(error => {
+            console.log(`Error:`, error.message);
+          })
+
+      }
+      else {
+        localStorage.removeItem('access-token')
+      }
+      setLoading(false)
+    })
+    return () => {
+      return unsubscribe()
+    }
+  }, [])
+  ```
+
+#### few change cart part 
+
+```javascript
+import { useQuery } from '@tanstack/react-query';
+import { useContext } from "react";
+import { AuthContext } from '../AuthProvider/AuthProvider';
+import UseAxiosSecure from './UseAxiosSecures';
+const useCart = () => {
+  const { user,loading } = useContext(AuthContext)
+  // const token = localStorage.getItem('jwt-token')
+  const [axiosSecure]=UseAxiosSecure()
+  const {data:cart=[],refetch} = useQuery({
+    queryKey: ['cart', user?.email],
+    enabled: !loading && !!user?.email && !!localStorage.getItem("access-token"),
+    queryFn: async () => {
+      const response = await axiosSecure(`http://localhost:4000/carts?email=${user?.email}`)
+      console.log("response from axios",response.data);
+      return response.data
+    },
+  })
+
+  return [cart,refetch]
+}
+export default useCart
+```
+
+
+
+
+
+
+
+
+
 
     
 3. Generate SecreatKey:
