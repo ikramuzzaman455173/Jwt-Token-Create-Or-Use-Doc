@@ -165,29 +165,45 @@ const varifyJwt = (req, res, next) => {
 #### jwt token useAxiosSecure clien side:
 
 ```javascript
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, currentUser => {
-      setUser(currentUser)
-      // console.log('currentUser',currentUser);
-      if (currentUser) {
-        axios.post('http://localhost:4000/jwt', { email: currentUser.email })
-          .then(data => {
-            console.log(data.data.token);
-            localStorage.setItem('access-token',data.data.token)
-          }).catch(error => {
-            console.log(`Error:`, error.message);
-          })
+import axios from 'axios';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import UseAuth from './UseAuth';
 
+
+const useAxiosSecure = () => {
+  const {logOut}=UseAuth()
+  const navigate = useNavigate();
+
+  const axiosSecure = axios.create({
+    baseURL: 'https://bistro-boss-server-eight-inky.vercel.app',
+  });
+
+  useEffect(() => {
+    axiosSecure.interceptors.request.use((config) => {
+      const token = localStorage.getItem('access-token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
-      else {
-        localStorage.removeItem('access-token')
+      return config;
+    });
+
+    axiosSecure.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          await logOut();
+          navigate('/login');
+        }
+        return Promise.reject(error);
       }
-      setLoading(false)
-    })
-    return () => {
-      return unsubscribe()
-    }
-  }, [])
+    );
+  }, [logOut, navigate, axiosSecure]);
+
+  return [axiosSecure];
+};
+
+export default useAxiosSecure;
   ```
 
 #### few change cart part 
